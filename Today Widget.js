@@ -10,13 +10,12 @@
 
 // API KEY, you need an Open Weather API Key
 // You can get one for free at: https://home.openweathermap.org/api_keys    (account needed).
-const API_KEY = "2b6de734150dbe49a10f8a0bbb8e3dfd";
+const API_KEY = "";
 
 // Latitude and Longitude of the location you want to get the weather of.
 // You can get those from the Open Weather website while searching for a city, etc.
-const LAT = "51.2143";
-const LON = "-0.7959";
-const LOCATION_NAME = "Farnham";
+const LAT = "51.508";
+const LON = "-0.126";
 
 // units : string > Defines the unit used to measure the tempatures: "imperial" for Fahrenheit, "metric" for Celcius (Default: "metric").
 const units = "metric";
@@ -35,7 +34,7 @@ const accentColor = "#0986fe";
 // fontColor : hexString > Defines the color used for all text on the widget
 const textColor = "#ffffff";
 // fontColor : number > Defines the transparency of "secondary" text on the widget
-const opacity = 0.7;
+const opacity = 0.65;
 // fontSizes... : number > Defines the size of fonts used throughout the widget
 const smallFontSize = 11;
 const mediumFontSize = 12;
@@ -48,8 +47,8 @@ const showAllDayEvents = true;
 const showCalendarBullet = true;
 // showCalendarIcons : true|false > Defines if calendar icons should be shown in front of events (eg: cake for birthdays)
 const showCalendarIcons = true;
-// backgroundtColor : color > Defines the color that is overlayed over the background of the widget (Default: #2c2c2e, 0.35)
-const backgroundColor = new Color("#2c2c2e", 0.5);
+// backgroundColor : color > Defines the color that is overlayed over the background of the widget (Default: #2c2c2e, 0.4)
+const backgroundColor = new Color("#0c0c0c", 0.8);
 
 /**
  * Builds the events view
@@ -143,7 +142,7 @@ function buildCalendarView(stack) {
     const firstDayStack = new Date(date.getFullYear(), date.getMonth(), 1);
     const lastDayStack = new Date(date.getFullYear(), date.getMonth() + 1, 0);
 
-    const month = [["M"], ["T"], ["W"], ["T"], ["F"], ["S"], ["S"]];
+    const month = [ ["M"], ["T"], ["W"], ["T"], ["F"], ["S"], ["S"]];
 
     let dayStackCounter = 0;
 
@@ -252,7 +251,7 @@ function buildMiddleView(stack) {
   const topStack = stack.addStack();
   buildTextView(
     topStack,
-    LOCATION_NAME,
+    "Weather",
     "Feels like " + getWeatherFeelsLike(),
     Font.boldSystemFont(mediumFontSize),
     new Color(textColor)
@@ -421,9 +420,13 @@ function formatTime(date) {
   return dateFormatter.string(date);
 }
 function formatDate(date) {
+  let currentDate = new Date()
   let dateFormatter = new DateFormatter();
   dateFormatter.dateFormat = "E, MMM d";
-  return dateFormatter.string(date).toUpperCase();
+  currentDate = dateFormatter.string(currentDate).toUpperCase()
+  let eventDate = dateFormatter.string(date).toUpperCase()
+ if (currentDate == eventDate) { eventDate="TODAY"}
+  return eventDate;
 }
 
 /**
@@ -442,21 +445,21 @@ function formatEvent(stack, event, color, opacity) {
     color: event.calendar.color.hex,
     font: Font.boldSystemFont(smallFontSize)
   });
-  if (showCalendarBullet) {
-    // show calendar bulet in front of event name
-    addWidgetTextLine(eventLine, "● ", {
-      color: event.calendar.color.hex,
-      font: Font.mediumSystemFont(mediumFontSize)
-    });
     // show birthday icon
-    if (showCalendarIcons) {
-      if (event.calendar.title == "Birthdays") {
+    if (showCalendarIcons && event.calendar.title == "Birthdays") {
         addWidgetTextLine(eventLine, "🎂", {
           color: event.calendar.color.hex,
           font: Font.regularSystemFont(mediumFontSize)
         });
-      }
-    }
+    } else {
+      if (showCalendarBullet) {
+    // show calendar bulet in front of event name
+    addWidgetTextLine(eventLine, "● ", {
+      color: event.calendar.color.hex,
+      font: Font.mediumSystemFont(mediumFontSize)
+    
+    });
+  }
   }
   // event title
   let title = event.title;
@@ -597,6 +600,7 @@ const bottomStack = globalStack.addStack();
 bottomStack.setPadding(0, 0, 16, 0);
 bottomStack.addSpacer();
 bottomStack.addImage(await buildWeatherGraphImage());
+bottomStack.url = "googlemaps://";
 bottomStack.addSpacer();
 
 // ensure content is centered

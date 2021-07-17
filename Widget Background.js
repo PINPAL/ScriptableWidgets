@@ -1,11 +1,9 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: deep-green; icon-glyph: home;
+// icon-color: purple; icon-glyph: home;
 
 // This script is based upon the works by Max Zeryck.
 
-// The amount of blurring
-let blur = 65;
 
 // Require iCloud
 var fm = FileManager.iCloud();
@@ -49,7 +47,7 @@ if (exitOptions.length >= 2) {
 }
 
 // Get screenshot and determine phone size.
-let img = await Photos.fromLibrary();
+let img = await Photos.latestScreenshot();
 let height = img.size.height;
 let phone = phoneSizes()[height];
 if (!phone) {
@@ -75,17 +73,29 @@ if (config.hasOwnProperty("position")) {
   config.position = position;
 }
 
+// The amount of blurring
+let blur = 0;
+
+// Check if script is running with blur predefined in config
+if (config.hasOwnProperty("blur")) {
+  blur = config.blur;
+} else {
+  // If not then allow user to manually select.
+  // Prompt for blur
+  message = "How much blur would you like?";
+  blur = await generateAlert(message, [], [], true);
+  // Save user selection to config
+  config.blur = blur;
+}
+
 // Large widgets at the bottom have the "middle" y-value.
 crop.y = position ? phone.middle : phone.top;
 
 // We always need the cropped image.
 let imgCrop = cropImage(img);
 
-// If it's blurred, apply blurring before cropping.
-let blurred = true;
-if (blurred) {
-  imgCrop = await blurImage(img, imgCrop);
-}
+// Apply blurring before cropping.
+imgCrop = await blurImage(img, imgCrop);
 
 // Export Settings
 fm.writeString(configDir, JSON.stringify(config));
@@ -95,12 +105,16 @@ fm.writeImage(wallpaperDir, imgCrop);
 Script.complete();
 
 // Generate an alert with the provided array of options.
-async function generateAlert(message, options, destructiveOptions = []) {
+async function generateAlert(message, options, destructiveOptions = [], text = false) {
   let alert = new Alert();
   alert.message = message;
 
-  for (const option of options) {
-    alert.addAction(option);
+  if (text==true) {
+	alert.addTextField("0-255")
+  } else {
+  	for (const option of options) {
+   		alert.addAction(option);
+  	}
   }
 
   for (const option of destructiveOptions) {
@@ -108,6 +122,9 @@ async function generateAlert(message, options, destructiveOptions = []) {
   }
 
   let response = await alert.presentAlert();
+  if (text==true) {
+	response = await alert.textFieldValue(0);
+  }
   return response;
 }
 
@@ -120,6 +137,8 @@ function cropImage(image) {
   draw.drawImageAtPoint(image, new Point(-rect.x, -rect.y));
   return draw.getImage();
 }
+
+Safari.open("scriptable:///run/Today%20Widget")
 
 async function blurImage(img, imgCrop) {
   const js = `
